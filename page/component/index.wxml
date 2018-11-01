@@ -27,6 +27,9 @@
     </view>
      <view><button bindtap='reuestDemo'>请求例子</button></view>
    <view><button bindtap='code2openid'>获取openIdcode2openid</button></view>
-    <view><button bindtap='openSetting'>获取打开设置界面</button></view>
+    <view><button bindtap='openSetting'>查看授权</button></view>
+    <view><button bindtap='authorizeRequest'>向用户发起授权请求</button></view>
+    <view><button bindtap='authSetting'>打开授权设置</button></view>
+    <view><button bindtap='payMethod'>支付</button></view>
   </view>
 </view>

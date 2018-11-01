@@ -1,5 +1,6 @@
 Page({
   onShareAppMessage() {
+    
     return {
       title: '转发按钮',
       path: 'page/API/pages/share-button/share-button'

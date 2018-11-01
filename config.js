@@ -9,7 +9,7 @@ const host = '14592619.qcloud.la'
 
 const config = {
 
-  localServer: 'http://192.168.0.102/',
+  localServer: 'http://192.168.0.103/',
 
 
   // 下面的地址配合云端 Server 工作

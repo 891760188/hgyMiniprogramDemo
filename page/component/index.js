@@ -1,4 +1,5 @@
 const config = require('../../config')
+var appInstance = getApp(); 
 Page({
   onShareAppMessage() {
     return {
@@ -124,5 +125,138 @@ Page({
         }
       }
     })
+  },
+  /**
+   * 向用户发起授权请求
+   * https://developers.weixin.qq.com/miniprogram/dev/api/open-api/authorize/wx.authorize.html
+   */
+  authorizeRequest(){
+    // wx.authorize({
+    //   scope: 'scope.camera',
+    //   success() {
+    //     // 用户已经授权，后续不会弹窗询问
+    //    debugger
+    //   },
+    //   fail:function(){
+    //     debugger
+    //   }
+    // })
   }
+  ,
+  /**
+   * 打开授权设置
+   */
+  authSetting(){
+    wx.openSetting({
+      success(res) {
+        console.log(res.authSetting)
+        // res.authSetting = {
+        //   "scope.userInfo": true,
+        //   "scope.userLocation": true
+        // }
+      }
+    })
+  },
+  /**
+   *  支付例子
+   * const config = require('../../config')获取全局配置
+   * const appInstance = getApp();获取全局上下文实例
+   */
+  payMethod(){
+    let _this = this ;//当前上下文
+    //获取登录code  
+    wx.login({
+      success: result =>{
+        console.info(result.code)
+        //获取openid 
+        _this.getOpenId(result.code) 
+      }
+    }); 
+  },
+  /**
+   * 用code作为参数请求Java服务，像微信服务换取openId，access_token
+   * 此处用到openId，access_token暂时无用，为安全起见，此字段不返回客户端
+   */
+  getOpenId(code){
+    let _this = this;//当前上下文
+    wx.request({
+      url: config.localServer + 'api/wc/jscode2session.wc',
+      data: { code: code},
+      method: 'POST',
+      success: result =>{
+        console.info('返回openId')
+        console.info(result.data)
+        _this.generateOrder(result.data.data.openid)
+      },
+      fail:() => {
+        console.info('fail')
+      },
+      complete: () => {
+        // complete 
+      }
+    }) 
+  },
+  /**
+   * 用openid，在Java服务请求微信服务，获取支付的请求参数
+   */
+  generateOrder(openid){
+    var _this = this 
+
+    var paymentPo={
+      openid: openid,
+      total_fee: '0.1',
+      mch_id: 'mch_id',
+      body: '支付测试',
+      detail: 'detail',
+      attach: '假酒'
+    }
+
+    wx.request({
+      url: config.localServer + 'api/wc/payOrderPublic.wc',
+      method: 'POST',
+      data: paymentPo,
+      success: result => {
+        console.info(result)
+        var pay = result.data.data
+        //发起支付 
+        var timeStamp = pay[0].timeStamp;
+        console.info("timeStamp:" + timeStamp)
+        var packages = pay[0].package;
+        console.info("package:" + packages)
+        var paySign = pay[0].paySign;
+        console.info("paySign:" + paySign)
+        var nonceStr = pay[0].nonceStr;
+        console.info("nonceStr:" + nonceStr)
+        var param = { "timeStamp": timeStamp, "package": packages, "paySign": paySign, "signType": "MD5", "nonceStr": nonceStr };
+        _this.pay(param)
+      },
+    }) 
+  },
+  /**
+   * 支付的动作
+   */
+  pay(param){
+    console.info("支付")
+    console.info(param)
+    wx.requestPayment({
+      timeStamp: param.timeStamp,
+      nonceStr: param.nonceStr,
+      package: param.package,
+      signType: param.signType,
+      paySign: param.paySign,
+      success: (result) => {
+        console.info("支付")
+        console.info(result)
+     
+      },
+      fail: (result) => {
+        console.info("支付失败")
+        console.info(result)
+      },
+      complete: () => {
+        console.info("pay complete")
+      }
+    }) 
+  }
+
 })
